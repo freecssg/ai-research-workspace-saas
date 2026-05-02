@@ -1,0 +1,16 @@
+[project]
+name = "scholarflow-api"
+version = "0.1.0"
+description = "Backend API foundation for the ScholarFlow Research Workspace SaaS module."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
