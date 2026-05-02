@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import FileStatus, enum_column
+from app.models.enums import FileSourceType, FileStatus, enum_column
 from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
@@ -38,6 +38,12 @@ class File(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     storage_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     checksum_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_type: Mapped[FileSourceType] = mapped_column(
+        enum_column(FileSourceType, "file_source_type"),
+        nullable=False,
+        default=FileSourceType.UPLOAD,
+        server_default=FileSourceType.UPLOAD.value,
+    )
     status: Mapped[FileStatus] = mapped_column(
         enum_column(FileStatus, "file_status"),
         nullable=False,
@@ -47,3 +53,11 @@ class File(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     workspace: Mapped[Workspace] = relationship(back_populates="files")
     project: Mapped[Project | None] = relationship(back_populates="files")
+
+    @property
+    def file_size(self) -> int:
+        return self.size_bytes
+
+    @property
+    def processing_status(self) -> FileStatus:
+        return self.status

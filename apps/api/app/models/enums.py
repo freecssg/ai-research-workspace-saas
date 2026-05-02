@@ -38,6 +38,10 @@ class FileStatus(StrEnum):
     FAILED = "failed"
 
 
+class FileSourceType(StrEnum):
+    UPLOAD = "upload"
+
+
 class KnowledgeBaseStatus(StrEnum):
     PENDING = "pending"
     BUILDING = "building"

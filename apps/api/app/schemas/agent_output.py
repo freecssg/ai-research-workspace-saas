@@ -15,8 +15,6 @@ class AgentOutputBase(APIModel):
 
 
 class AgentOutputCreate(AgentOutputBase):
-    workspace_id: UUID
-    project_id: UUID | None = None
     source_task_id: UUID | None = None
 
 

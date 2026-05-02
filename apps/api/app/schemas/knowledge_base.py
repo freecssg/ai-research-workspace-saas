@@ -13,8 +13,7 @@ class KnowledgeBaseBase(APIModel):
 
 
 class KnowledgeBaseCreate(KnowledgeBaseBase):
-    workspace_id: UUID
-    project_id: UUID | None = None
+    pass
 
 
 class KnowledgeBaseUpdate(APIModel):

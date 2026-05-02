@@ -69,3 +69,70 @@ Health check:
 ```bash
 curl http://127.0.0.1:8000/health
 ```
+
+Swagger API docs are available at:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### API auth flow
+
+Register a user:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"researcher@example.com","full_name":"Researcher","password":"change-me-123"}'
+```
+
+Login and copy the returned `access_token`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"researcher@example.com","password":"change-me-123"}'
+```
+
+Use the bearer token for protected routes:
+
+```bash
+TOKEN="<paste access_token>"
+curl http://127.0.0.1:8000/api/v1/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Create a workspace and project:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/workspaces \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Default Workspace","description":"Local research workspace"}'
+
+curl -X POST http://127.0.0.1:8000/api/v1/workspaces/<workspace_id>/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Literature Review","description":"MVP project"}'
+```
+
+Upload a supported research file:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/projects/<project_id>/files \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "upload=@/path/to/paper.pdf"
+```
+
+### API smoke test plan
+
+After the database is running and migrations are applied, verify:
+
+```bash
+python -m compileall app scripts
+alembic current
+python -m scripts.check_db
+curl http://127.0.0.1:8000/health
+```
+
+Then exercise this protected flow in `/docs` or with `curl`: register, login, create workspace, create project, upload file, create knowledge base, create task, create output, and confirm a second user cannot access the first user's workspace.

@@ -13,7 +13,7 @@ class ProjectBase(APIModel):
 
 
 class ProjectCreate(ProjectBase):
-    workspace_id: UUID
+    pass
 
 
 class ProjectUpdate(APIModel):

@@ -4,6 +4,7 @@ from app.schemas.agent_output import (
     AgentOutputRead,
     AgentOutputUpdate,
 )
+from app.schemas.auth import LoginRequest, RegisterRequest, Token
 from app.schemas.file import FileBase, FileCreate, FileRead, FileUpdate
 from app.schemas.knowledge_base import (
     KnowledgeBaseBase,
@@ -21,6 +22,7 @@ __all__ = [
     "AgentOutputCreate",
     "AgentOutputRead",
     "AgentOutputUpdate",
+    "LoginRequest",
     "FileBase",
     "FileCreate",
     "FileRead",
@@ -33,10 +35,12 @@ __all__ = [
     "ProjectCreate",
     "ProjectRead",
     "ProjectUpdate",
+    "RegisterRequest",
     "TaskBase",
     "TaskCreate",
     "TaskRead",
     "TaskUpdate",
+    "Token",
     "UserBase",
     "UserCreate",
     "UserRead",

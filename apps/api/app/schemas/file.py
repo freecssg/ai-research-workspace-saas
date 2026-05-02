@@ -2,7 +2,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from app.models.enums import FileStatus
+from app.models.enums import FileSourceType, FileStatus
 from app.schemas.common import APIModel, ReadModel
 
 
@@ -13,6 +13,7 @@ class FileBase(APIModel):
     storage_path: str = Field(min_length=1, max_length=1024)
     size_bytes: int = Field(ge=0)
     checksum_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    source_type: FileSourceType = FileSourceType.UPLOAD
     status: FileStatus = FileStatus.UPLOADED
 
 
@@ -35,3 +36,5 @@ class FileUpdate(APIModel):
 class FileRead(FileBase, ReadModel):
     workspace_id: UUID
     project_id: UUID | None = None
+    file_size: int
+    processing_status: FileStatus

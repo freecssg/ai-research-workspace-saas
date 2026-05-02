@@ -43,6 +43,10 @@ class Settings(BaseSettings):
         validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES",
     )
     upload_dir: Path = Field(default=API_ROOT / "uploads", validation_alias="UPLOAD_DIR")
+    max_upload_size_bytes: int = Field(
+        default=25 * 1024 * 1024,
+        validation_alias="MAX_UPLOAD_SIZE_BYTES",
+    )
 
 
 @lru_cache

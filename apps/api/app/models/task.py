@@ -54,6 +54,7 @@ class Task(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result_ref: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 
     workspace: Mapped[Workspace] = relationship(back_populates="tasks")
     project: Mapped[Project | None] = relationship(back_populates="tasks")

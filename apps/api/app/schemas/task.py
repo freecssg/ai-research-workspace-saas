@@ -13,11 +13,11 @@ class TaskBase(APIModel):
     progress: int = Field(default=0, ge=0, le=100)
     celery_task_id: str | None = Field(default=None, max_length=255)
     error_message: str | None = None
+    result_ref: str | None = Field(default=None, max_length=1024)
 
 
 class TaskCreate(TaskBase):
-    workspace_id: UUID
-    project_id: UUID | None = None
+    pass
 
 
 class TaskUpdate(APIModel):
@@ -28,6 +28,7 @@ class TaskUpdate(APIModel):
     progress: int | None = Field(default=None, ge=0, le=100)
     celery_task_id: str | None = Field(default=None, max_length=255)
     error_message: str | None = None
+    result_ref: str | None = Field(default=None, max_length=1024)
 
 
 class TaskRead(TaskBase, ReadModel):

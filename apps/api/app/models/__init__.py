@@ -2,6 +2,7 @@ from app.models.agent_output import AgentOutput
 from app.models.enums import (
     AgentOutputStatus,
     AgentOutputType,
+    FileSourceType,
     FileStatus,
     KnowledgeBaseStatus,
     ProjectStatus,
@@ -21,6 +22,7 @@ __all__ = [
     "AgentOutputStatus",
     "AgentOutputType",
     "File",
+    "FileSourceType",
     "FileStatus",
     "KnowledgeBase",
     "KnowledgeBaseStatus",

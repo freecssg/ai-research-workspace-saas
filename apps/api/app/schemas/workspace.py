@@ -11,7 +11,7 @@ class WorkspaceBase(APIModel):
 
 
 class WorkspaceCreate(WorkspaceBase):
-    owner_id: UUID
+    pass
 
 
 class WorkspaceUpdate(APIModel):
