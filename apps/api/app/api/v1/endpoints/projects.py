@@ -1,67 +1,54 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, SessionDep
+from app.schemas.common import Message
 from app.schemas.project import ProjectCreate, ProjectRead, ProjectUpdate
-from app.services import project_service
+from app.services.project_service import ProjectService
 
-router = APIRouter(tags=["projects"])
-
-SkipQuery = Annotated[int, Query(ge=0)]
-LimitQuery = Annotated[int, Query(ge=1, le=100)]
+router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.get("/workspaces/{workspace_id}/projects", response_model=list[ProjectRead])
+@router.get("", response_model=list[ProjectRead])
 def list_projects(
-    workspace_id: UUID,
     db: SessionDep,
-    current_user: CurrentUser,
-    skip: SkipQuery = 0,
-    limit: LimitQuery = 50,
+    _: CurrentUser,
+    skip: int = 0,
+    limit: int = 50,
 ) -> list[ProjectRead]:
-    return project_service.list_projects(db, current_user, workspace_id, skip, limit)
+    return [
+        ProjectRead.model_validate(project)
+        for project in ProjectService.list_projects(db, skip, limit)
+    ]
 
 
-@router.post(
-    "/workspaces/{workspace_id}/projects",
-    response_model=ProjectRead,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("", response_model=ProjectRead, status_code=201)
 def create_project(
-    workspace_id: UUID,
     payload: ProjectCreate,
     db: SessionDep,
     current_user: CurrentUser,
 ) -> ProjectRead:
-    return project_service.create_project(db, current_user, workspace_id, payload)
+    return ProjectRead.model_validate(ProjectService.create_project(db, payload, current_user))
 
 
-@router.get("/projects/{project_id}", response_model=ProjectRead)
-def get_project(
-    project_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> ProjectRead:
-    return project_service.get_project(db, current_user, project_id)
+@router.get("/{project_id}", response_model=ProjectRead)
+def get_project(project_id: UUID, db: SessionDep, _: CurrentUser) -> ProjectRead:
+    return ProjectRead.model_validate(ProjectService.get_project(db, project_id))
 
 
-@router.patch("/projects/{project_id}", response_model=ProjectRead)
+@router.patch("/{project_id}", response_model=ProjectRead)
 def update_project(
     project_id: UUID,
     payload: ProjectUpdate,
     db: SessionDep,
     current_user: CurrentUser,
 ) -> ProjectRead:
-    return project_service.update_project(db, current_user, project_id, payload)
+    project = ProjectService.update_project(db, project_id, payload, current_user)
+    return ProjectRead.model_validate(project)
 
 
-@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(
-    project_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> Response:
-    project_service.delete_project(db, current_user, project_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{project_id}", response_model=Message)
+def delete_project(project_id: UUID, db: SessionDep, current_user: CurrentUser) -> Message:
+    ProjectService.delete_project(db, project_id, current_user)
+    return Message(detail="Project deleted")

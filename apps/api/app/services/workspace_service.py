@@ -1,90 +1,64 @@
+from __future__ import annotations
+
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import User, Workspace
+from app.models import KnowledgeBase, User, Workspace
 from app.schemas.workspace import WorkspaceCreate, WorkspaceUpdate
-from app.services.common import get_owned_workspace
+from app.services.common import get_or_404, paginate
 
 
-def list_workspaces(
-    db: Session,
-    current_user: User,
-    skip: int = 0,
-    limit: int = 50,
-) -> list[Workspace]:
-    return list(
-        db.scalars(
+class WorkspaceService:
+    @staticmethod
+    def list_workspaces(db: Session, kb_id: UUID, skip: int, limit: int) -> list[Workspace]:
+        get_or_404(db, KnowledgeBase, kb_id, "Knowledge base")
+        statement = (
             select(Workspace)
-            .where(Workspace.owner_id == current_user.id)
+            .where(Workspace.knowledge_base_id == kb_id)
             .order_by(Workspace.created_at.desc())
-            .offset(skip)
-            .limit(limit)
         )
-    )
+        return list(db.scalars(paginate(statement, skip, limit)))
 
+    @staticmethod
+    def get_workspace(db: Session, workspace_id: UUID) -> Workspace:
+        return get_or_404(db, Workspace, workspace_id, "Workspace")
 
-def create_workspace(db: Session, current_user: User, payload: WorkspaceCreate) -> Workspace:
-    existing = db.scalar(
-        select(Workspace).where(
-            Workspace.owner_id == current_user.id,
-            Workspace.name == payload.name,
+    @staticmethod
+    def create_workspace(
+        db: Session,
+        kb_id: UUID,
+        payload: WorkspaceCreate,
+        user: User,
+    ) -> Workspace:
+        get_or_404(db, KnowledgeBase, kb_id, "Knowledge base")
+        workspace = Workspace(
+            **payload.model_dump(),
+            knowledge_base_id=kb_id,
+            created_by_id=user.id,
         )
-    )
-    if existing is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Workspace name already exists",
-        )
+        db.add(workspace)
+        db.commit()
+        db.refresh(workspace)
+        return workspace
 
-    workspace = Workspace(
-        owner_id=current_user.id,
-        **payload.model_dump(),
-    )
-    db.add(workspace)
-    db.commit()
-    db.refresh(workspace)
-    return workspace
+    @staticmethod
+    def update_workspace(
+        db: Session,
+        workspace_id: UUID,
+        payload: WorkspaceUpdate,
+    ) -> Workspace:
+        workspace = WorkspaceService.get_workspace(db, workspace_id)
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(workspace, field, value)
+        db.add(workspace)
+        db.commit()
+        db.refresh(workspace)
+        return workspace
 
-
-def get_workspace(db: Session, current_user: User, workspace_id: UUID) -> Workspace:
-    return get_owned_workspace(db, current_user, workspace_id)
-
-
-def update_workspace(
-    db: Session,
-    current_user: User,
-    workspace_id: UUID,
-    payload: WorkspaceUpdate,
-) -> Workspace:
-    workspace = get_owned_workspace(db, current_user, workspace_id)
-    update_data = payload.model_dump(exclude_unset=True)
-
-    if "name" in update_data and update_data["name"] != workspace.name:
-        existing = db.scalar(
-            select(Workspace).where(
-                Workspace.owner_id == current_user.id,
-                Workspace.name == update_data["name"],
-                Workspace.id != workspace.id,
-            )
-        )
-        if existing is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Workspace name already exists",
-            )
-
-    for field, value in update_data.items():
-        setattr(workspace, field, value)
-
-    db.commit()
-    db.refresh(workspace)
-    return workspace
-
-
-def delete_workspace(db: Session, current_user: User, workspace_id: UUID) -> None:
-    workspace = get_owned_workspace(db, current_user, workspace_id)
-    db.delete(workspace)
-    db.commit()
+    @staticmethod
+    def delete_workspace(db: Session, workspace_id: UUID) -> None:
+        workspace = WorkspaceService.get_workspace(db, workspace_id)
+        db.delete(workspace)
+        db.commit()

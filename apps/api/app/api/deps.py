@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
-from app.models import User, UserStatus
-from app.services.auth_service import get_user_by_id
+from app.models import Project, User
+from app.services.common import require_admin, require_project_editor, require_project_leader
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -45,8 +45,8 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         ) from None
 
-    user = get_user_by_id(db, user_id)
-    if user is None or user.status != UserStatus.ACTIVE:
+    user = db.get(User, user_id)
+    if user is None or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is not active",
@@ -57,3 +57,32 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_current_admin_user(current_user: CurrentUser) -> User:
+    return require_admin(current_user)
+
+
+AdminUser = Annotated[User, Depends(get_current_admin_user)]
+
+
+def get_editable_project(
+    project_id: UUID,
+    db: SessionDep,
+    current_user: CurrentUser,
+) -> Project:
+    return require_project_editor(db, project_id, current_user)
+
+
+ProjectEditor = Annotated[Project, Depends(get_editable_project)]
+
+
+def get_manageable_project_team(
+    project_id: UUID,
+    db: SessionDep,
+    current_user: CurrentUser,
+) -> Project:
+    return require_project_leader(db, project_id, current_user)
+
+
+ProjectLeader = Annotated[Project, Depends(get_manageable_project_team)]

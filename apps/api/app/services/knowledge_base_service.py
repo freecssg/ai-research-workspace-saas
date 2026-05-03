@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from uuid import UUID
 
 from sqlalchemy import select
@@ -5,80 +7,47 @@ from sqlalchemy.orm import Session
 
 from app.models import KnowledgeBase, User
 from app.schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate
-from app.services.common import get_owned_project, get_owned_workspace, not_found
+from app.services.common import get_or_404, paginate
 
 
-def list_knowledge_bases(
-    db: Session,
-    current_user: User,
-    project_id: UUID,
-    skip: int = 0,
-    limit: int = 50,
-) -> list[KnowledgeBase]:
-    project = get_owned_project(db, current_user, project_id)
-    return list(
-        db.scalars(
-            select(KnowledgeBase)
-            .where(
-                KnowledgeBase.workspace_id == project.workspace_id,
-                KnowledgeBase.project_id == project.id,
-            )
-            .order_by(KnowledgeBase.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-    )
+class KnowledgeBaseService:
+    @staticmethod
+    def list_knowledge_bases(db: Session, skip: int, limit: int) -> list[KnowledgeBase]:
+        statement = select(KnowledgeBase).order_by(KnowledgeBase.created_at.desc())
+        return list(db.scalars(paginate(statement, skip, limit)))
 
+    @staticmethod
+    def get_knowledge_base(db: Session, kb_id: UUID) -> KnowledgeBase:
+        return get_or_404(db, KnowledgeBase, kb_id, "Knowledge base")
 
-def create_knowledge_base(
-    db: Session,
-    current_user: User,
-    project_id: UUID,
-    payload: KnowledgeBaseCreate,
-) -> KnowledgeBase:
-    project = get_owned_project(db, current_user, project_id)
-    knowledge_base = KnowledgeBase(
-        workspace_id=project.workspace_id,
-        project_id=project.id,
-        **payload.model_dump(),
-    )
-    db.add(knowledge_base)
-    db.commit()
-    db.refresh(knowledge_base)
-    return knowledge_base
+    @staticmethod
+    def create_knowledge_base(
+        db: Session,
+        payload: KnowledgeBaseCreate,
+        user: User,
+    ) -> KnowledgeBase:
+        kb = KnowledgeBase(**payload.model_dump(), created_by_id=user.id)
+        db.add(kb)
+        db.commit()
+        db.refresh(kb)
+        return kb
 
+    @staticmethod
+    def update_knowledge_base(
+        db: Session,
+        kb_id: UUID,
+        payload: KnowledgeBaseUpdate,
+    ) -> KnowledgeBase:
+        kb = KnowledgeBaseService.get_knowledge_base(db, kb_id)
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(kb, field, value)
+        db.add(kb)
+        db.commit()
+        db.refresh(kb)
+        return kb
 
-def get_knowledge_base(db: Session, current_user: User, kb_id: UUID) -> KnowledgeBase:
-    knowledge_base = db.get(KnowledgeBase, kb_id)
-    if knowledge_base is None:
-        raise not_found("Knowledge base")
-
-    get_owned_workspace(db, current_user, knowledge_base.workspace_id)
-    return knowledge_base
-
-
-def update_knowledge_base(
-    db: Session,
-    current_user: User,
-    kb_id: UUID,
-    payload: KnowledgeBaseUpdate,
-) -> KnowledgeBase:
-    knowledge_base = get_knowledge_base(db, current_user, kb_id)
-    update_data = payload.model_dump(exclude_unset=True)
-
-    if update_data.get("project_id") is not None:
-        project = get_owned_project(db, current_user, update_data["project_id"])
-        knowledge_base.workspace_id = project.workspace_id
-
-    for field, value in update_data.items():
-        setattr(knowledge_base, field, value)
-
-    db.commit()
-    db.refresh(knowledge_base)
-    return knowledge_base
-
-
-def delete_knowledge_base(db: Session, current_user: User, kb_id: UUID) -> None:
-    knowledge_base = get_knowledge_base(db, current_user, kb_id)
-    db.delete(knowledge_base)
-    db.commit()
+    @staticmethod
+    def delete_knowledge_base(db: Session, kb_id: UUID) -> None:
+        kb = KnowledgeBaseService.get_knowledge_base(db, kb_id)
+        db.delete(kb)
+        db.commit()

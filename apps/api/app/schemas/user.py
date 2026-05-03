@@ -1,13 +1,14 @@
 from pydantic import EmailStr, Field, SecretStr
 
-from app.models.enums import UserStatus
+from app.models.enums import UserRole
 from app.schemas.common import APIModel, ReadModel
 
 
 class UserBase(APIModel):
     email: EmailStr
-    full_name: str | None = Field(default=None, max_length=255)
-    status: UserStatus = UserStatus.ACTIVE
+    name: str = Field(min_length=1, max_length=255)
+    role: UserRole = UserRole.MEMBER
+    is_active: bool = True
 
 
 class UserCreate(UserBase):
@@ -16,9 +17,10 @@ class UserCreate(UserBase):
 
 class UserUpdate(APIModel):
     email: EmailStr | None = None
-    full_name: str | None = Field(default=None, max_length=255)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
     password: SecretStr | None = Field(default=None, min_length=8, max_length=128)
-    status: UserStatus | None = None
+    role: UserRole | None = None
+    is_active: bool | None = None
 
 
 class UserRead(UserBase, ReadModel):

@@ -21,57 +21,167 @@ def enum_column(enum_cls: type[EnumT], name: str) -> SQLAlchemyEnum:
     )
 
 
-class UserStatus(StrEnum):
-    ACTIVE = "active"
-    DISABLED = "disabled"
-
-
-class ProjectStatus(StrEnum):
-    ACTIVE = "active"
-    ARCHIVED = "archived"
-
-
-class FileStatus(StrEnum):
-    UPLOADED = "uploaded"
-    PROCESSING = "processing"
-    READY = "ready"
-    FAILED = "failed"
-
-
-class FileSourceType(StrEnum):
-    UPLOAD = "upload"
-
-
 class KnowledgeBaseStatus(StrEnum):
-    PENDING = "pending"
+    DRAFT = "draft"
     BUILDING = "building"
     READY = "ready"
     FAILED = "failed"
+    ARCHIVED = "archived"
+
+
+class UserRole(StrEnum):
+    ADMIN = "admin"
+    MEMBER = "member"
+
+
+class WorkspaceStatus(StrEnum):
+    DRAFT = "draft"
+    ANALYZING = "analyzing"
+    READY = "ready"
+    FAILED = "failed"
+    ARCHIVED = "archived"
+
+
+class SourceKind(StrEnum):
+    PAPER = "paper"
+    DATASET = "dataset"
+    NOTE = "note"
+    TRANSCRIPT = "transcript"
+    REPORT = "report"
+    WEBPAGE = "webpage"
+    EXPERIMENT_RESULT = "experiment_result"
+    OTHER = "other"
+
+
+class SourceVisibility(StrEnum):
+    PUBLIC = "public"
+    PRIVATE = "private"
+    LAB_INTERNAL = "lab_internal"
+
+
+class SourceProcessingStatus(StrEnum):
+    UPLOADED = "uploaded"
+    QUEUED = "queued"
+    PROCESSING = "processing"
+    ANALYZED = "analyzed"
+    INDEXED = "indexed"
+    FAILED = "failed"
+
+
+class AnalysisAgentType(StrEnum):
+    PAPER_ANALYSIS = "paper_analysis"
+    DATASET_ANALYSIS = "dataset_analysis"
+    METHOD_EXTRACTION = "method_extraction"
+    THEORY_MAPPING = "theory_mapping"
+    CITATION_ANALYSIS = "citation_analysis"
+    TREND_ANALYSIS = "trend_analysis"
+    RAG_INDEXING = "rag_indexing"
+    GRAPH_BUILDING = "graph_building"
+    CUSTOM = "custom"
+
+
+class ThoughtChainType(StrEnum):
+    THEORY_PATH = "theory_path"
+    METHOD_RELATION = "method_relation"
+    CONCEPT_RELATION = "concept_relation"
+    RESEARCH_GAP = "research_gap"
+    RESEARCH_QUESTION = "research_question"
+    ARGUMENT_STRUCTURE = "argument_structure"
+    DATA_THEORY_MAPPING = "data_theory_mapping"
+    CUSTOM = "custom"
+
+
+class ConversationSenderType(StrEnum):
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
+    AGENT = "agent"
+
+
+class ProjectType(StrEnum):
+    LITERATURE_REVIEW = "literature_review"
+    REB_APPLICATION = "reb_application"
+    DATA_ANALYSIS = "data_analysis"
+    PRESENTATION = "presentation"
+    MANUSCRIPT = "manuscript"
+    RESEARCH_PROPOSAL = "research_proposal"
+    CUSTOM = "custom"
+
+
+class ProjectStatus(StrEnum):
+    DRAFT = "draft"
+    ACTIVE = "active"
+    COMPLETED = "completed"
+    ARCHIVED = "archived"
+
+
+class ProjectMemberRole(StrEnum):
+    LEADER = "leader"
+    EDITOR = "editor"
+    VIEWER = "viewer"
+
+
+class WorkflowType(StrEnum):
+    LITERATURE_REVIEW = "literature_review"
+    REB_APPLICATION = "reb_application"
+    DATA_ANALYSIS = "data_analysis"
+    PRESENTATION = "presentation"
+    MANUSCRIPT = "manuscript"
+    CUSTOM = "custom"
+
+
+class WorkflowStatus(StrEnum):
+    DRAFT = "draft"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    PAUSED = "paused"
+
+
+class WorkflowStepStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class TaskScope(StrEnum):
+    KNOWLEDGE_BASE = "knowledge_base"
+    WORKSPACE = "workspace"
+    PROJECT = "project"
+    SYSTEM = "system"
 
 
 class TaskType(StrEnum):
-    FILE_INGESTION = "file_ingestion"
-    KNOWLEDGE_BASE_BUILD = "knowledge_base_build"
-    OUTPUT_GENERATION = "output_generation"
+    SOURCE_ANALYSIS = "source_analysis"
+    WIKI_BUILD = "wiki_build"
+    RAG_INDEX = "rag_index"
+    GRAPH_BUILD = "graph_build"
+    AGENT_RUN = "agent_run"
+    WORKFLOW_RUN = "workflow_run"
+    CITATION_CHECK = "citation_check"
+    CONSISTENCY_CHECK = "consistency_check"
 
 
 class TaskStatus(StrEnum):
     QUEUED = "queued"
     RUNNING = "running"
-    SUCCEEDED = "succeeded"
+    COMPLETED = "completed"
     FAILED = "failed"
-    CANCELED = "canceled"
+    CANCELLED = "cancelled"
 
 
 class AgentOutputType(StrEnum):
-    SUMMARY = "summary"
-    REPORT = "report"
-    WIKI_PLACEHOLDER = "wiki_placeholder"
-    GRAPH_PLACEHOLDER = "graph_placeholder"
-    AGENT_WORKFLOW_PLACEHOLDER = "agent_workflow_placeholder"
-
-
-class AgentOutputStatus(StrEnum):
-    DRAFT = "draft"
-    READY = "ready"
-    FAILED = "failed"
+    WIKI_PAGE = "wiki_page"
+    PAPER_SUMMARY = "paper_summary"
+    DATASET_SUMMARY = "dataset_summary"
+    METHOD_SUMMARY = "method_summary"
+    TREND_SUMMARY = "trend_summary"
+    LITERATURE_REVIEW = "literature_review"
+    REB_APPLICATION = "reb_application"
+    DATA_REPORT = "data_report"
+    PRESENTATION_OUTLINE = "presentation_outline"
+    MANUSCRIPT_SECTION = "manuscript_section"
+    NOTES = "notes"
+    CUSTOM = "custom"

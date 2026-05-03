@@ -9,7 +9,8 @@ from app.schemas.common import APIModel, ReadModel
 class KnowledgeBaseBase(APIModel):
     name: str = Field(min_length=1, max_length=160)
     description: str | None = None
-    status: KnowledgeBaseStatus = KnowledgeBaseStatus.PENDING
+    research_domain: str = Field(min_length=1, max_length=255)
+    status: KnowledgeBaseStatus = KnowledgeBaseStatus.DRAFT
 
 
 class KnowledgeBaseCreate(KnowledgeBaseBase):
@@ -17,12 +18,11 @@ class KnowledgeBaseCreate(KnowledgeBaseBase):
 
 
 class KnowledgeBaseUpdate(APIModel):
-    project_id: UUID | None = None
     name: str | None = Field(default=None, min_length=1, max_length=160)
     description: str | None = None
+    research_domain: str | None = Field(default=None, min_length=1, max_length=255)
     status: KnowledgeBaseStatus | None = None
 
 
 class KnowledgeBaseRead(KnowledgeBaseBase, ReadModel):
-    workspace_id: UUID
-    project_id: UUID | None = None
+    created_by_id: UUID

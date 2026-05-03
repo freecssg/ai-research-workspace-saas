@@ -1,24 +1,28 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, SessionDep
-from app.schemas.auth import LoginRequest, RegisterRequest, Token
+from app.schemas.auth import ChangePasswordRequest, LoginRequest, LoginResponse
 from app.schemas.user import UserRead
-from app.services import auth_service
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(payload: RegisterRequest, db: SessionDep) -> UserRead:
-    return auth_service.register_user(db, payload)
-
-
-@router.post("/login", response_model=Token)
-def login(payload: LoginRequest, db: SessionDep) -> Token:
-    user = auth_service.authenticate_user(db, payload)
-    return auth_service.create_user_token(user)
+@router.post("/login", response_model=LoginResponse)
+def login(payload: LoginRequest, db: SessionDep) -> LoginResponse:
+    return AuthService.authenticate(db, payload)
 
 
 @router.get("/me", response_model=UserRead)
-def me(current_user: CurrentUser) -> UserRead:
-    return current_user
+def get_me(current_user: CurrentUser) -> UserRead:
+    return UserRead.model_validate(current_user)
+
+
+@router.patch("/change-password", response_model=UserRead)
+def change_password(
+    payload: ChangePasswordRequest,
+    db: SessionDep,
+    current_user: CurrentUser,
+) -> UserRead:
+    user = AuthService.change_password(db, current_user, payload)
+    return UserRead.model_validate(user)

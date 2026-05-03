@@ -1,98 +1,58 @@
+from __future__ import annotations
+
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Project, User
+from app.models import Project, ProjectMemberRole, ProjectTeamMember, User
 from app.schemas.project import ProjectCreate, ProjectUpdate
-from app.services.common import get_owned_project, get_owned_workspace
+from app.services.common import get_or_404, paginate, require_project_editor
 
 
-def list_projects(
-    db: Session,
-    current_user: User,
-    workspace_id: UUID,
-    skip: int = 0,
-    limit: int = 50,
-) -> list[Project]:
-    get_owned_workspace(db, current_user, workspace_id)
-    return list(
-        db.scalars(
-            select(Project)
-            .where(Project.workspace_id == workspace_id)
-            .order_by(Project.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-    )
+class ProjectService:
+    @staticmethod
+    def list_projects(db: Session, skip: int, limit: int) -> list[Project]:
+        statement = select(Project).order_by(Project.created_at.desc())
+        return list(db.scalars(paginate(statement, skip, limit)))
 
+    @staticmethod
+    def get_project(db: Session, project_id: UUID) -> Project:
+        return get_or_404(db, Project, project_id, "Project")
 
-def create_project(
-    db: Session,
-    current_user: User,
-    workspace_id: UUID,
-    payload: ProjectCreate,
-) -> Project:
-    get_owned_workspace(db, current_user, workspace_id)
-    existing = db.scalar(
-        select(Project).where(
-            Project.workspace_id == workspace_id,
-            Project.name == payload.name,
-        )
-    )
-    if existing is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Project name already exists in this workspace",
-        )
-
-    project = Project(
-        workspace_id=workspace_id,
-        **payload.model_dump(),
-    )
-    db.add(project)
-    db.commit()
-    db.refresh(project)
-    return project
-
-
-def get_project(db: Session, current_user: User, project_id: UUID) -> Project:
-    return get_owned_project(db, current_user, project_id)
-
-
-def update_project(
-    db: Session,
-    current_user: User,
-    project_id: UUID,
-    payload: ProjectUpdate,
-) -> Project:
-    project = get_owned_project(db, current_user, project_id)
-    update_data = payload.model_dump(exclude_unset=True)
-
-    if "name" in update_data and update_data["name"] != project.name:
-        existing = db.scalar(
-            select(Project).where(
-                Project.workspace_id == project.workspace_id,
-                Project.name == update_data["name"],
-                Project.id != project.id,
+    @staticmethod
+    def create_project(db: Session, payload: ProjectCreate, user: User) -> Project:
+        project = Project(**payload.model_dump(), created_by_id=user.id)
+        db.add(project)
+        db.flush()
+        db.add(
+            ProjectTeamMember(
+                project_id=project.id,
+                user_id=user.id,
+                member_role=ProjectMemberRole.LEADER,
             )
         )
-        if existing is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Project name already exists in this workspace",
-            )
+        db.commit()
+        db.refresh(project)
+        return project
 
-    for field, value in update_data.items():
-        setattr(project, field, value)
+    @staticmethod
+    def update_project(
+        db: Session,
+        project_id: UUID,
+        payload: ProjectUpdate,
+        user: User,
+    ) -> Project:
+        project = require_project_editor(db, project_id, user)
+        for field, value in payload.model_dump(exclude_unset=True).items():
+            setattr(project, field, value)
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+        return project
 
-    db.commit()
-    db.refresh(project)
-    return project
-
-
-def delete_project(db: Session, current_user: User, project_id: UUID) -> None:
-    project = get_owned_project(db, current_user, project_id)
-    db.delete(project)
-    db.commit()
+    @staticmethod
+    def delete_project(db: Session, project_id: UUID, user: User) -> None:
+        project = require_project_editor(db, project_id, user)
+        db.delete(project)
+        db.commit()

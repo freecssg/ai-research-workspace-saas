@@ -1,61 +1,57 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import AdminUser, CurrentUser, SessionDep
+from app.schemas.common import Message
 from app.schemas.workspace import WorkspaceCreate, WorkspaceRead, WorkspaceUpdate
-from app.services import workspace_service
+from app.services.workspace_service import WorkspaceService
 
-router = APIRouter(prefix="/workspaces", tags=["workspaces"])
-
-SkipQuery = Annotated[int, Query(ge=0)]
-LimitQuery = Annotated[int, Query(ge=1, le=100)]
+router = APIRouter(tags=["workspaces"])
 
 
-@router.get("", response_model=list[WorkspaceRead])
+@router.get("/knowledge-bases/{kb_id}/workspaces", response_model=list[WorkspaceRead])
 def list_workspaces(
+    kb_id: UUID,
     db: SessionDep,
-    current_user: CurrentUser,
-    skip: SkipQuery = 0,
-    limit: LimitQuery = 50,
+    _: CurrentUser,
+    skip: int = 0,
+    limit: int = 50,
 ) -> list[WorkspaceRead]:
-    return workspace_service.list_workspaces(db, current_user, skip, limit)
+    return [
+        WorkspaceRead.model_validate(workspace)
+        for workspace in WorkspaceService.list_workspaces(db, kb_id, skip, limit)
+    ]
 
 
-@router.post("", response_model=WorkspaceRead, status_code=status.HTTP_201_CREATED)
+@router.post("/knowledge-bases/{kb_id}/workspaces", response_model=WorkspaceRead, status_code=201)
 def create_workspace(
+    kb_id: UUID,
     payload: WorkspaceCreate,
     db: SessionDep,
-    current_user: CurrentUser,
+    current_admin: AdminUser,
 ) -> WorkspaceRead:
-    return workspace_service.create_workspace(db, current_user, payload)
+    workspace = WorkspaceService.create_workspace(db, kb_id, payload, current_admin)
+    return WorkspaceRead.model_validate(workspace)
 
 
-@router.get("/{workspace_id}", response_model=WorkspaceRead)
-def get_workspace(
-    workspace_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> WorkspaceRead:
-    return workspace_service.get_workspace(db, current_user, workspace_id)
+@router.get("/workspaces/{workspace_id}", response_model=WorkspaceRead)
+def get_workspace(workspace_id: UUID, db: SessionDep, _: CurrentUser) -> WorkspaceRead:
+    return WorkspaceRead.model_validate(WorkspaceService.get_workspace(db, workspace_id))
 
 
-@router.patch("/{workspace_id}", response_model=WorkspaceRead)
+@router.patch("/workspaces/{workspace_id}", response_model=WorkspaceRead)
 def update_workspace(
     workspace_id: UUID,
     payload: WorkspaceUpdate,
     db: SessionDep,
-    current_user: CurrentUser,
+    _: AdminUser,
 ) -> WorkspaceRead:
-    return workspace_service.update_workspace(db, current_user, workspace_id, payload)
+    workspace = WorkspaceService.update_workspace(db, workspace_id, payload)
+    return WorkspaceRead.model_validate(workspace)
 
 
-@router.delete("/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_workspace(
-    workspace_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> Response:
-    workspace_service.delete_workspace(db, current_user, workspace_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/workspaces/{workspace_id}", response_model=Message)
+def delete_workspace(workspace_id: UUID, db: SessionDep, _: AdminUser) -> Message:
+    WorkspaceService.delete_workspace(db, workspace_id)
+    return Message(detail="Workspace deleted")

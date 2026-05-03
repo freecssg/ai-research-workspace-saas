@@ -6,6 +6,35 @@ This repository contains Module 1 of the AI Research Assistant system: the Resea
 
 The backend lives in `apps/api` and uses FastAPI, SQLAlchemy 2.x, Pydantic v2, Alembic, and PostgreSQL.
 
+## Corrected Concept Model
+
+This MVP is now modeled for a local research lab deployment rather than a public SaaS signup flow.
+
+- A professor/admin creates lab user accounts for members.
+- `KnowledgeBase` is the top-level research domain container.
+- `Workspace` is a topic space inside a knowledge base.
+- `SourceMaterial`, `AIAnalysisAgentConfig`, `ThoughtChain`, and `Conversation` attach to a knowledge base and optionally a workspace.
+- `Project` is output-oriented and independent from the knowledge-base hierarchy.
+- `ProjectSourceSelection` links a project to selected knowledge bases, workspaces, source materials, and thought chains.
+- `ProjectWorkflow` and `ProjectWorkflowStep` model output generation workflow records.
+- `Task` and `AgentOutput` can point at knowledge-base, workspace, or project scopes, but do not implement real LLM Wiki, RAG, or agent execution logic yet.
+
+The previous public registration and project-owned knowledge-base assumptions are intentionally removed from the active API surface. There is no `/auth/register` endpoint; lab accounts are created by admins through `/api/v1/admin/users`.
+
+### API Surface
+
+The backend exposes `/health` plus corrected `/api/v1` routes for:
+
+- authentication: login, current user, password change
+- admin user management
+- knowledge bases and nested workspaces
+- source materials with local file upload support
+- AI analysis agent configs
+- thought chains and conversations
+- output-oriented projects, project teams, source selections, workflows, workflow steps, outputs, and task records
+
+All protected routes require a bearer token. Admin-only routes manage users, knowledge bases, workspaces, and agent configs. Project workflow, source-selection, and output edits require admin access or project `leader`/`editor` membership.
+
 ### Database Setup
 
 From the repository root, create a local environment file and start PostgreSQL and Redis:
@@ -76,52 +105,21 @@ Swagger API docs are available at:
 http://127.0.0.1:8000/docs
 ```
 
-### API auth flow
+### Auth flow
 
-Register a user:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"researcher@example.com","full_name":"Researcher","password":"change-me-123"}'
-```
-
-Login and copy the returned `access_token`:
+Admins create users; users do not self-register:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"researcher@example.com","password":"change-me-123"}'
+  -d '{"email":"admin@example.com","password":"change-me"}'
 ```
 
-Use the bearer token for protected routes:
+Use the returned token:
 
 ```bash
-TOKEN="<paste access_token>"
 curl http://127.0.0.1:8000/api/v1/auth/me \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-Create a workspace and project:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/workspaces \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Default Workspace","description":"Local research workspace"}'
-
-curl -X POST http://127.0.0.1:8000/api/v1/workspaces/<workspace_id>/projects \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Literature Review","description":"MVP project"}'
-```
-
-Upload a supported research file:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/projects/<project_id>/files \
-  -H "Authorization: Bearer $TOKEN" \
-  -F "upload=@/path/to/paper.pdf"
+  -H "Authorization: Bearer <access_token>"
 ```
 
 ### API smoke test plan
@@ -134,5 +132,3 @@ alembic current
 python -m scripts.check_db
 curl http://127.0.0.1:8000/health
 ```
-
-Then exercise this protected flow in `/docs` or with `curl`: register, login, create workspace, create project, upload file, create knowledge base, create task, create output, and confirm a second user cannot access the first user's workspace.

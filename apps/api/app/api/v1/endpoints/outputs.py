@@ -1,50 +1,44 @@
-from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter
 
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, ProjectEditor, SessionDep
 from app.schemas.agent_output import AgentOutputCreate, AgentOutputRead, AgentOutputUpdate
-from app.services import output_service
+from app.schemas.common import Message
+from app.services.output_service import OutputService
 
 router = APIRouter(tags=["outputs"])
 
-SkipQuery = Annotated[int, Query(ge=0)]
-LimitQuery = Annotated[int, Query(ge=1, le=100)]
-
 
 @router.get("/projects/{project_id}/outputs", response_model=list[AgentOutputRead])
-def list_outputs(
+def list_project_outputs(
     project_id: UUID,
     db: SessionDep,
-    current_user: CurrentUser,
-    skip: SkipQuery = 0,
-    limit: LimitQuery = 50,
+    _: CurrentUser,
+    skip: int = 0,
+    limit: int = 50,
 ) -> list[AgentOutputRead]:
-    return output_service.list_outputs(db, current_user, project_id, skip, limit)
+    return [
+        AgentOutputRead.model_validate(output)
+        for output in OutputService.list_outputs(db, project_id, skip, limit)
+    ]
 
 
-@router.post(
-    "/projects/{project_id}/outputs",
-    response_model=AgentOutputRead,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_output(
+@router.post("/projects/{project_id}/outputs", response_model=AgentOutputRead, status_code=201)
+def create_project_output(
     project_id: UUID,
     payload: AgentOutputCreate,
     db: SessionDep,
     current_user: CurrentUser,
+    _: ProjectEditor,
 ) -> AgentOutputRead:
-    return output_service.create_output(db, current_user, project_id, payload)
+    output = OutputService.create_output(db, project_id, payload, current_user)
+    return AgentOutputRead.model_validate(output)
 
 
 @router.get("/outputs/{output_id}", response_model=AgentOutputRead)
-def get_output(
-    output_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> AgentOutputRead:
-    return output_service.get_output(db, current_user, output_id)
+def get_output(output_id: UUID, db: SessionDep, _: CurrentUser) -> AgentOutputRead:
+    return AgentOutputRead.model_validate(OutputService.get_output(db, output_id))
 
 
 @router.patch("/outputs/{output_id}", response_model=AgentOutputRead)
@@ -54,14 +48,11 @@ def update_output(
     db: SessionDep,
     current_user: CurrentUser,
 ) -> AgentOutputRead:
-    return output_service.update_output(db, current_user, output_id, payload)
+    output = OutputService.update_output(db, output_id, payload, current_user)
+    return AgentOutputRead.model_validate(output)
 
 
-@router.delete("/outputs/{output_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_output(
-    output_id: UUID,
-    db: SessionDep,
-    current_user: CurrentUser,
-) -> Response:
-    output_service.delete_output(db, current_user, output_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/outputs/{output_id}", response_model=Message)
+def delete_output(output_id: UUID, db: SessionDep, current_user: CurrentUser) -> Message:
+    OutputService.delete_output(db, output_id, current_user)
+    return Message(detail="Output deleted")
