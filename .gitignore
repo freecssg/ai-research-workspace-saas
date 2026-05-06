@@ -6,3 +6,5 @@ __pycache__/
 .ruff_cache/
 
 apps/api/.venv/
+apps/web/node_modules/@next/swc-darwin-x64/
+apps/web/node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node

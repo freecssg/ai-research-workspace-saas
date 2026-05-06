@@ -48,6 +48,23 @@ class Settings(BaseSettings):
         validation_alias="MAX_UPLOAD_SIZE_BYTES",
     )
 
+    default_admin_email: str | None = Field(
+        default=None,
+        validation_alias="DEFAULT_ADMIN_EMAIL",
+    )
+    default_admin_name: str | None = Field(
+        default=None,
+        validation_alias="DEFAULT_ADMIN_NAME",
+    )
+    default_admin_password: str | None = Field(
+        default=None,
+        validation_alias="DEFAULT_ADMIN_PASSWORD",
+    )
+    default_admin_reset_password: bool = Field(
+        default=False,
+        validation_alias="DEFAULT_ADMIN_RESET_PASSWORD",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

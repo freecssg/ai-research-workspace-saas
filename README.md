@@ -47,7 +47,7 @@ docker compose --env-file .env -f infra/docker/docker-compose.yml up -d postgres
 The default local database URL is:
 
 ```text
-postgresql+psycopg://postgres:postgres@localhost:5432/research_workspace
+postgresql+psycopg://postgres:guelph@localhost:5432/research_workspace
 ```
 
 ### Backend setup
@@ -78,6 +78,34 @@ To create future migrations after model changes:
 ```bash
 alembic revision --autogenerate -m "describe change"
 ```
+
+### Create default admin user
+
+For local development and frontend testing, create the default lab admin after migrations:
+
+```bash
+cd apps/api
+alembic upgrade head
+python scripts/create_default_admin.py
+```
+
+The default local values from `.env.example` are:
+
+```text
+DEFAULT_ADMIN_EMAIL=neo@ubc.ca
+DEFAULT_ADMIN_NAME=Neo
+DEFAULT_ADMIN_PASSWORD=guelph
+```
+
+These credentials are for local development only. Change them before using the system in any real lab deployment.
+
+The script is idempotent. If the user already exists, it ensures the account is an active admin and leaves the password unchanged by default. To reset the password from `DEFAULT_ADMIN_PASSWORD`, run:
+
+```bash
+python scripts/create_default_admin.py --reset-password
+```
+
+You can also set `DEFAULT_ADMIN_RESET_PASSWORD=true` in `.env`.
 
 ### Database connectivity check
 
