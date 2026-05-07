@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bell, Search, Settings, UserRound } from "lucide-react";
 
 import { IconButton } from "@/components/ui/icon-button";
@@ -28,14 +29,22 @@ export function TopBar({
         </div>
         <div className="flex items-center gap-4">
           <IconButton icon={<Bell className="h-6 w-6" />} label="Notifications" />
-          <IconButton icon={<Settings className="h-6 w-6" />} label="Settings" />
-          <button
-            type="button"
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            title="Settings"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-card text-primary transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Settings className="h-6 w-6" />
+          </Link>
+          <Link
+            href="/profile"
             aria-label="User profile"
+            title="User profile"
             className="flex h-14 w-14 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-primary transition-colors hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <UserRound className="h-8 w-8" />
-          </button>
+          </Link>
         </div>
       </div>
     </header>

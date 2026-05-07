@@ -81,7 +81,6 @@ import {
   type KnowledgeBaseRead,
   type SourceMaterialRead,
   type ThoughtChainRead,
-  type WorkspaceRead,
 } from "./kb-api";
 import {
   AdminCreateButton,

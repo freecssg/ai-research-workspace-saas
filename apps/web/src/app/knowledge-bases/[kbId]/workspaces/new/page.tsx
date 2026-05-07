@@ -1,4 +1,4 @@
-import { KnowledgeBaseWorkspaceNewPlaceholderClient } from "@/features/knowledge-bases/kb-pages";
+import { WorkspaceNewClient } from "@/features/workspaces/workspace-pages";
 
 export default async function NewKnowledgeBaseWorkspacePage({
   params,
@@ -6,5 +6,5 @@ export default async function NewKnowledgeBaseWorkspacePage({
   params: Promise<{ kbId: string }>;
 }) {
   const { kbId } = await params;
-  return <KnowledgeBaseWorkspaceNewPlaceholderClient kbId={kbId} />;
+  return <WorkspaceNewClient kbId={kbId} />;
 }

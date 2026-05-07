@@ -4,7 +4,6 @@ import {
   Archive,
   Bot,
   ChevronDown,
-  Database,
   FileText,
   Folder,
   Grid2X2,
@@ -293,7 +292,7 @@ export function GeneratedContentArticle() {
         </h1>
         <p className="mt-7 text-xl leading-9 text-foreground">{generatedArticle.intro}</p>
         <blockquote className="mt-7 rounded-md border-l-4 border-primary bg-accent/70 px-7 py-6 text-xl italic leading-9 text-foreground">
-          "{generatedArticle.quote}"
+          &quot;{generatedArticle.quote}&quot;
         </blockquote>
         <div className="mt-8 flex items-center justify-between border-b pb-3">
           <h2 className="text-2xl font-extrabold">{generatedArticle.sectionTitle}</h2>

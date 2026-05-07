@@ -55,7 +55,7 @@ async function apiRequest<T>(
   const requestBody: BodyInit | undefined =
     options.body === undefined
       ? undefined
-      : isFormData
+      : options.body instanceof FormData
         ? options.body
         : JSON.stringify(options.body);
 

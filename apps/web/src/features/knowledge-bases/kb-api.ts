@@ -37,6 +37,13 @@ export type WorkspaceRead = {
   updated_at: string;
 };
 
+export type WorkspaceCreate = {
+  name: string;
+  description?: string | null;
+  research_topic: string;
+  status?: WorkspaceRead["status"];
+};
+
 export type SourceMaterialRead = {
   id: string;
   knowledge_base_id: string;
@@ -178,12 +185,36 @@ export function listKnowledgeBaseWorkspaces(kbId: string) {
   return apiGet<WorkspaceRead[]>(`/knowledge-bases/${kbId}/workspaces?skip=0&limit=50`);
 }
 
+export function createKnowledgeBaseWorkspace(kbId: string, payload: WorkspaceCreate) {
+  return apiPost<WorkspaceRead>(`/knowledge-bases/${kbId}/workspaces`, payload);
+}
+
+export function getWorkspace(workspaceId: string) {
+  return apiGet<WorkspaceRead>(`/workspaces/${workspaceId}`);
+}
+
+export function updateWorkspace(workspaceId: string, payload: Partial<WorkspaceCreate>) {
+  return apiPatch<WorkspaceRead>(`/workspaces/${workspaceId}`, payload);
+}
+
+export function deleteWorkspace(workspaceId: string) {
+  return apiDelete<MessageResponse>(`/workspaces/${workspaceId}`);
+}
+
 export function listKnowledgeBaseMaterials(kbId: string) {
   return apiGet<SourceMaterialRead[]>(`/knowledge-bases/${kbId}/materials?skip=0&limit=50`);
 }
 
 export function createKnowledgeBaseMaterial(kbId: string, formData: FormData) {
   return apiPost<SourceMaterialRead>(`/knowledge-bases/${kbId}/materials`, formData);
+}
+
+export function listWorkspaceMaterials(workspaceId: string) {
+  return apiGet<SourceMaterialRead[]>(`/workspaces/${workspaceId}/materials?skip=0&limit=50`);
+}
+
+export function createWorkspaceMaterial(workspaceId: string, formData: FormData) {
+  return apiPost<SourceMaterialRead>(`/workspaces/${workspaceId}/materials`, formData);
 }
 
 export function deleteSourceMaterial(materialId: string) {
@@ -196,6 +227,14 @@ export function listKnowledgeBaseAgents(kbId: string) {
 
 export function createKnowledgeBaseAgent(kbId: string, payload: AIAnalysisAgentConfigCreate) {
   return apiPost<AIAnalysisAgentConfigRead>(`/knowledge-bases/${kbId}/agents`, payload);
+}
+
+export function listWorkspaceAgents(workspaceId: string) {
+  return apiGet<AIAnalysisAgentConfigRead[]>(`/workspaces/${workspaceId}/agents?skip=0&limit=50`);
+}
+
+export function createWorkspaceAgent(workspaceId: string, payload: AIAnalysisAgentConfigCreate) {
+  return apiPost<AIAnalysisAgentConfigRead>(`/workspaces/${workspaceId}/agents`, payload);
 }
 
 export function updateAgent(agentId: string, payload: Partial<AIAnalysisAgentConfigCreate>) {
@@ -216,6 +255,16 @@ export function createKnowledgeBaseThoughtChain(kbId: string, payload: ThoughtCh
   return apiPost<ThoughtChainRead>(`/knowledge-bases/${kbId}/thought-chains`, payload);
 }
 
+export function listWorkspaceThoughtChains(workspaceId: string) {
+  return apiGet<ThoughtChainRead[]>(
+    `/workspaces/${workspaceId}/thought-chains?skip=0&limit=50`,
+  );
+}
+
+export function createWorkspaceThoughtChain(workspaceId: string, payload: ThoughtChainCreate) {
+  return apiPost<ThoughtChainRead>(`/workspaces/${workspaceId}/thought-chains`, payload);
+}
+
 export function updateThoughtChain(thoughtChainId: string, payload: Partial<ThoughtChainCreate>) {
   return apiPatch<ThoughtChainRead>(`/thought-chains/${thoughtChainId}`, payload);
 }
@@ -226,6 +275,10 @@ export function deleteThoughtChain(thoughtChainId: string) {
 
 export function createKnowledgeBaseConversation(kbId: string, title: string) {
   return apiPost<ConversationRead>(`/knowledge-bases/${kbId}/conversations`, { title });
+}
+
+export function createWorkspaceConversation(workspaceId: string, title: string) {
+  return apiPost<ConversationRead>(`/workspaces/${workspaceId}/conversations`, { title });
 }
 
 export function getConversation(conversationId: string) {
