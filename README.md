@@ -160,3 +160,12 @@ alembic current
 python -m scripts.check_db
 curl http://127.0.0.1:8000/health
 ```
+
+## Test Version Deployment
+
+For a complete local test deployment checklist, including runtime configuration, database
+initialization, build/start commands, log locations, and manual test plan, see:
+
+```text
+docs/test-version-deployment.md
+```

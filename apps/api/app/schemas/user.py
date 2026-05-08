@@ -12,13 +12,13 @@ class UserBase(APIModel):
 
 
 class UserCreate(UserBase):
-    password: SecretStr = Field(min_length=8, max_length=128)
+    password: SecretStr = Field(min_length=6, max_length=128)
 
 
 class UserUpdate(APIModel):
     email: EmailStr | None = None
     name: str | None = Field(default=None, min_length=1, max_length=255)
-    password: SecretStr | None = Field(default=None, min_length=8, max_length=128)
+    password: SecretStr | None = Field(default=None, min_length=6, max_length=128)
     role: UserRole | None = None
     is_active: bool | None = None
 
