@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     )
     environment: str = Field(default="local", validation_alias="ENVIRONMENT")
     api_v1_prefix: str = Field(default="/api/v1", validation_alias="API_V1_PREFIX")
+    cors_origins: str = Field(
+        default="http://127.0.0.1:3000,http://localhost:3000",
+        validation_alias="CORS_ORIGINS",
+    )
 
     database_url: str = Field(
         default="postgresql+psycopg://postgres:postgres@localhost:5432/research_workspace",
@@ -64,6 +68,10 @@ class Settings(BaseSettings):
         default=False,
         validation_alias="DEFAULT_ADMIN_RESET_PASSWORD",
     )
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 @lru_cache

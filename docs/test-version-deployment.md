@@ -59,9 +59,22 @@ DEFAULT_ADMIN_EMAIL=neo@ubc.ca
 DEFAULT_ADMIN_NAME=Neo
 DEFAULT_ADMIN_PASSWORD=guelph
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
+CORS_ORIGINS=http://127.0.0.1:3000,http://localhost:3000
 ```
 
 For any real lab deployment, replace `SECRET_KEY` and the default admin password before allowing users onto the system.
+
+When accessing the frontend from another computer on the lab network, do not leave
+`NEXT_PUBLIC_API_BASE_URL` as `http://127.0.0.1:8000`. Browser-side requests would
+then target the client computer instead of the server. Use the server address instead:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=http://<SERVER_LAN_IP_OR_HOSTNAME>:8000
+CORS_ORIGINS=http://<SERVER_LAN_IP_OR_HOSTNAME>:3000,http://localhost:3000,http://127.0.0.1:3000
+```
+
+After changing `NEXT_PUBLIC_API_BASE_URL`, rebuild the frontend because Next.js embeds
+`NEXT_PUBLIC_*` values at build time.
 
 ## 3. Database Installation and Initialization
 
